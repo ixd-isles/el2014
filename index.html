@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<meta http-equiv="Access-Control-Allow-Origin" content="*">
+<title>2014 Election Districts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="jquery/jquery-1.6.4.min.js"></script>
+
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+   integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+   crossorigin=""/>
+ <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+   integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+   crossorigin=""></script>
+ <script src="randomColor.min.js"></script>
+ <script src="http://maps.stamen.com/js/tile.stamen.js"></script>
+ <link rel="stylesheet" href="leaflet-sidebar/L.Control.Sidebar.css" />
+    <script src="leaflet-sidebar/L.Control.Sidebar.js"></script>
+	<script src="button/leaflet-button.js"></script>
+  
+ <!-- FontAaaawwwwesome -->  
+  <script src="https://use.fontawesome.com/0a9a58d8dc.js"></script>  
+ <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.0.1/leaflet-omnivore.min.js'></script>
+ 
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="https://unpkg.com/esri-leaflet@2.0.8"></script>
+ 
+ <!-- Esri Leaflet Geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@2.2.6/dist/esri-leaflet-geocoder.css">
+    <script src="https://unpkg.com/esri-leaflet-geocoder@2.2.6"></script>
+ 
+ <style>
+ body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #mapdiv {
+    height: 100%;
+    width: 100vw;
+}
+
+table, tr, td {
+	padding-left:5px;
+	padding-right:5px;
+}
+
+</style>
+</head>				
+<div id="mapdiv"></div>	
+<body>
+<script type="text/javascript">
+
+var map = L.map('mapdiv',{
+  fullscreenControl: true,
+  fullscreenControlOptions: {
+    position: 'topleft'
+  }
+} ).setView([40.224, -74.768], 14);
+
+var searchControl = L.esri.Geocoding.geosearch().addTo(map);
+
+  var info_sidebar = document.createElement('div');
+  info_sidebar.id = "infoSidebar";
+  info_sidebar.class = "sidebar";
+  $('body')[0].appendChild(info_sidebar);
+
+  
+  infoSidebar = new L.control.sidebar('infoSidebar',{
+      position: 'right'
+  });
+	map.addControl(infoSidebar);
+	
+var stamenstreets = L.tileLayer('http://a.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {attribution: 'uses a <a href="http://stamen.com">stamen</a> basemap'});
+
+
+googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+	maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3'],
+	attribution: 'uses google satellite'
+});
+
+googleStr = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+	maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3'],
+	attribution: 'uses google streets'
+});
+
+var stamenLabels = L.tileLayer('http://a.tile.stamen.com/toner-labels/{z}/{x}/{y}.png', {attribution: 'uses <a href="http://stamen.com">stamen</a> labels'});
+
+var satLabel = new L.layerGroup();
+makeSatLabels(satLabel);
+
+function makeSatLabels(e) {
+	e._layers[36] = googleSat;
+	satLabel.addLayer(stamenLabels);
+}
+stamenstreets.addTo(map);
+
+var districtURL = encodeURI("https://trenton-downtown.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM table_2014");
+var bases = {"BW Streets": stamenstreets, "Streets": googleStr, "Satellite": satLabel};
+var overlayLayers = {};
+
+function getDistColor(d) {
+  switch (d) {
+    case 'Perez':
+      return '#4CAF50';
+	case 'Jackson':
+	        return '#4CAF50';
+    case 'Leggett':
+      return '#03A9F4';
+    case 'Golden':
+      return '#FFC107';
+    default:
+      return '#FFEDA0';
+  }
+  }
+		
+
+function getColor(d) {
+  switch (d) {
+    case 'Perez':
+      return '#F44336';
+	case 'Jackson':
+	        return '#4CAF50';
+    case 'Golden':
+      return '#03A9F4';
+    case 'Leggett':
+      return '#FFC107';
+    default:
+      return '#FFEDA0';
+  }
+  }
+  
+function m1style(feature) {
+
+			return {
+					weight: 2,
+					opacity: .5,
+					color: 'white',
+					fillOpacity: 0.4,
+					fillColor: getColor(feature.properties.m1winner)
+				};
+			}
+function m2style(feature) {
+
+			return {
+					weight: 4,
+					opacity: .5,
+					color: getColor(feature.properties.m2winner),
+					fillOpacity: 0.4,
+					fillColor: getColor(feature.properties.m2winner)
+				};
+			}
+function dstyle(feature) {
+
+			return {
+					weight: 4,
+					opacity: .5,
+					color: '#fff',
+					fillOpacity: .5,
+					fillColor: '#00ffff'
+				};
+			}
+
+function bstyle(feature) {
+
+			return {
+					weight: 4,
+					opacity: .5,
+					color: '#fff',
+					fillOpacity: .5,
+					fillColor: '#e6e600'
+				};
+			}
+
+function baseStyle(feature) {
+
+			return {
+					weight: 4,
+					opacity: .5,
+					color: '#444',
+					fillOpacity: 0,
+					fillColor: '#fff'
+				};
+			}
+			
+var all;
+var mayor;
+var atlarge;
+var whichWard;
+var ward;
+
+function sortSimple(a,b) {
+	  if (a.votes > b.votes)
+		return -1;
+	  if (a.votes < b.votes)
+		return 1;
+	  return 0;
+	}
+function sortComplex(a,b) {
+	  if (a.votes[0] > b.votes[0])
+		return -1;
+	  if (a.votes[0] < b.votes[0])
+		return 1;
+	  return 0;
+	}
+	
+function wardSetup(e) {
+	if (e.ward == 'East') {
+		ward = 
+			[{name:"Reynolds-J", votes: [e.e1_verlina,e.e2_verlina]},{name:"Murray",votes: [e.e1_murray,'']}, {name:"Harrison",votes: [e.e1_harrison,e.e2_harrison]}];
+		ward.sort(sortComplex);
+		}
+		
+	else if (e.ward == 'West' ) {
+		 ward = 
+			[{name:"Chester",votes: [e.w_chester,'']}, {name:"Brown",votes: [e.w_brown,'']}];
+		ward.sort(sortComplex);			
+		}
+		
+	else if (e.ward == 'North') {
+		ward = 
+			[{name:"Caldwell-W",votes: [e.n_marge,'']},{name:"Ward",votes: [e.n_algie,'']}];	
+					ward.sort(sortComplex);
+		}
+		
+	else if (e.ward == 'South') {
+		ward = 
+			[{name:"Muschal",votes: [e.s_muschal,'']},{name:"Cunningham",votes: [e.s_cunningham,'']}, {name:"Fuller",votes: [e.s_fuller,'']}];	
+					ward.sort(sortComplex);
+		}
+	}
+
+var candHilites = '';
+
+function hiliteCandidates(e) {
+	if (e.hmorej == true) {
+		candHilites += 'Harrison > Jackson<br>';
+	}
+	if (e.h_strong == true) {
+		candHilites += 'Harrison > his own average<br>';	
+	}
+	if (e.bmorej == true) {
+		candHilites += 'Bethea > Jackson<br>';	
+	}
+	if (e.b_strong == true) {
+		candHilites += 'Bethea > his own average<br>';	
+	}
+	document.getElementById("Hilites").innerHTML = candHilites;
+
+}
+
+function displayDistrictStats(e) {
+			candHilites = '';
+			var info = e.target.feature.properties;
+			mayorTable.innerHTML = "<tr style='font-weight:bold'><td style='width:80px'></td>" + "<td>Initial</td>" + "<td>Runoff</td>" + "<td>+ / -</td></tr>";
+			councilTable.innerHTML = '';
+			wardTable.innerHTML = '';
+			sidebarTitle.innerHTML = info.distname.split(' ')[1] + " " +info.distname.split(' ')[2];
+			sidebarSubhead.innerHTML = info.m1winner + " | " + info.m2winner;
+			
+			var myr = [];
+			var al = [];
+			al = [{name: "Bethea", votes: info.al_bethea},{name: "Harrison", votes: info.al_harrison},{name: "Holly-Ward", votes: info.al_holly},{name: "Donahue", votes: info.al_donahue},{name: "Kasabach", votes: info.al_kasabach},{name: "Ingram", votes: info.al_ingram},{name: "Kennedy", votes: info.al_kennedy},{name: "Patterson", votes: info.al_patterson},{name:"Valentin",votes:info.al_valentin}];
+			
+			al.sort(sortSimple);
+			
+			for (i=0; i<=al.length-1; i++){
+				councilTable.innerHTML += "<tr>" + "<td style='width:80px'>" + al[i].name + "</td>" + "<td>" + al[i].votes + "</td>" + "<td></td>" + "<td></td>" + "</tr>";
+			}
+			
+			myr = [{name:"Jackson",votes: [info.m1_jackson,info.m2_jackson,info.m_jgain]},{name:"Perez",votes: [info.m1_perez,info.m2_perez,info.m_pgain]}, {name:"Worthy",votes: [info.m1_worthy,'','']},
+			{name:"Golden",votes: [info.m1_golden,'','']},{name:"Leggett",votes: [info.m1_leggett,'','']},{name:"McBride",votes: [info.m1_mcbride,'','']}];
+			
+			myr.sort(sortComplex);
+			
+			for (i=0; i<=myr.length-1; i++){
+				mayorTable.innerHTML += "<tr>" + "<td style='width:80px'>" + myr[i].name + "</td>" + "<td>" + myr[i].votes[0] + "</td>" + "<td>" + myr[i].votes[1]+ "</td>" + "<td>" + myr[i].votes[2]+ "</td>" + "</tr>";
+			}
+			
+			wardSetup(info);
+			
+			for (i=0; i<=ward.length-1; i++){
+				wardTable.innerHTML += "<tr>" + "<td style='width:80px'>" + ward[i].name + "</td>" + "<td>" + ward[i].votes[0] + "</td>" + "<td>" + ward[i].votes[1]+ "</td>" + "</tr>";
+			}		
+			
+			hiliteCandidates(info);
+		
+				if (infoSidebarOn == false) {
+					infoSidebar.show();
+					infoSidebarOn = true;
+				}
+}
+
+function loadMayoral() {
+
+m1=		$.getJSON(districtURL,
+            function(data) {
+			
+	        m1 = L.geoJson(data, {
+				style: 	m1style,
+				
+				onEachFeature: function (feature, layer) {
+								
+				var popupContent = 
+				"<b>" + feature.properties.distname.split(' ')[1] + " " +feature.properties.distname.split(' ')[2] + "</b>" +
+					"<br>" + feature.properties.m1winner + " | " + feature.properties.m2winner;
+				layer.bindTooltip(popupContent);
+				
+			layer.on('click', function (e){
+				displayDistrictStats(e);
+			});
+			
+			layer.on('mouseover', function (e){
+				displayDistrictStats(e);
+			});
+				}
+			});
+	m1.addTo(map);
+	overlayLayers["Mayor Initial"] = m1;			
+	});
+	
+	m2=	$.getJSON(districtURL,
+            function(data) {
+			
+			matrix=data;
+			
+	        m2 = L.geoJson(data, {
+				style: 	m2style,
+				
+				onEachFeature: function (feature, layer) {				
+				var popupContent = 
+					"<b>" + feature.properties.distname.split(' ')[1] + " " +feature.properties.distname.split(' ')[2] + "</b>" +
+					"<br>" + feature.properties.m1winner + " | " + feature.properties.m2winner;
+				layer.bindTooltip(popupContent);
+				
+			layer.on('click', function (e){
+				displayDistrictStats(e);
+			});
+			
+			layer.on('mouseover', function (e){
+				displayDistrictStats(e);
+			});
+				
+			}	
+			});
+	m2.addTo(map);
+	overlayLayers["Mayor Runoff"] = m2;	
+	loadHB();	
+			
+	});
+
+}
+
+function loadLayers() {
+	baseOutlines=		$.getJSON(districtURL,
+            function(data) {
+			
+	        baseOutlines = L.geoJson(data, {
+				style: 	baseStyle,
+				
+				onEachFeature: function (feature, layer) {
+												
+				var popupContent = 
+				"<b>" + feature.properties.ward[0] + " " +feature.properties.distname.split(' ')[2] + "</b>";
+				layer.bindTooltip(popupContent,{permanent:true});
+				
+			layer.on('click', function (e){
+				displayDistrictStats(e);
+			});
+			
+			layer.on('mouseover', function (e){
+				displayDistrictStats(e);
+			});
+				}
+			});
+	overlayLayers["District labels" + "<hr>"] = baseOutlines;			
+	});
+	loadMayoral();
+}
+
+function loadHB() {
+	duncan =	$.getJSON(encodeURI("https://trenton-downtown.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM table_2014 where h_strong = true OR hmorej = true"),
+            function(data) {
+				duncan = L.geoJson(data, {
+				style: dstyle,
+				
+				onEachFeature: function (feature, layer) {
+				candHilites = '';
+				hiliteCandidates(feature.properties);				
+				var popupContent = 
+					"<b>" + feature.properties.distname.split(' ')[1] + " " +feature.properties.distname.split(' ')[2] + "</b>" +
+					"<hr>" + 
+					candHilites;
+				layer.bindTooltip(popupContent);
+				
+			layer.on('click', function (e){
+				displayDistrictStats(e);
+			});
+			
+			layer.on('mouseover', function (e){
+				displayDistrictStats(e);
+			});
+				
+			}
+			});
+			overlayLayers["Harrison"] = duncan;
+			});
+
+	bethea =	$.getJSON(encodeURI("https://trenton-downtown.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM table_2014 where b_strong = true OR bmorej = true"),
+            function(data) {
+				bethea = L.geoJson(data, {
+				style: bstyle,
+				
+				onEachFeature: function (feature, layer) {
+				candHilites = '';
+				hiliteCandidates(feature.properties);				
+				var popupContent = 
+					"<b>" + feature.properties.distname.split(' ')[1] + " " +feature.properties.distname.split(' ')[2] + "</b>" +
+					"<hr>" + 
+					candHilites;
+				layer.bindTooltip(popupContent);
+				
+			layer.on('click', function (e){
+				displayDistrictStats(e);
+			});
+			
+			layer.on('mouseover', function (e){
+				displayDistrictStats(e);
+			});
+				
+			}
+			});
+			overlayLayers["Bethea"] = bethea;
+			L.control.layers(bases, overlayLayers, {position:'topleft'}).addTo(map);
+			});
+}
+
+
+var infoSidebarOn=false;
+var sidebarFramework = 
+	"<i class='fa fa-times fa-lg' style='float:right' onClick='infoSidebar.toggle();infoSidebarOn=false;' ></i>" + 
+	"<h3 id='sidebarTitle'></h3>" +
+	"<h4 id='sidebarSubhead' style='margin-top:-20px;'></h4>" +
+	"<hr>" + 
+	"<table id='mayorTable'></table>" +
+	"<hr>" + 
+	"<table id='councilTable'></table>" +
+	"<hr>" + 
+	"<table id='wardTable'></table>"+
+	"<hr>" + 
+	"<h4 id='Hilites'></h4>";
+					
+	infoSidebar.setContent(sidebarFramework);
+
+var matrix;	
+
+	loadLayers();
+
+
+		
+
+</script>
+</body>
+</html>
